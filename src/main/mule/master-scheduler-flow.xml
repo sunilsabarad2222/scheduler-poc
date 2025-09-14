@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="master-scheduler-flow" doc:id="da1c48b7-2c28-403f-a197-66c290572fda" >
+		<scheduler doc:name="Scheduler" doc:id="f3f45d51-6347-465d-8dd1-6fa5bf9a5fff" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="1" timeUnit="MINUTES" />
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Start Scheduler" doc:id="04701ec4-d7b8-4b59-93a1-95837a3f1e07" message="Start Scheduler #[payload]" />
+		<ee:transform doc:name="Transform Message" doc:id="5233c7c8-f97e-4479-b76d-f96ec3e5a333" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+now() as DateTime >> "+05:30"]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;if(payload.hour == 10 and payload.dayOfWeek == 1) p('EveryMonday')&#10;else if (payload.hour == 21 and payload.dayOfWeek == 5) p('EveryFriday9PM')&#10;else if(payload.hour == 14) p('EveryDaily2PM') else &quot;no-flow&quot;]" doc:name="route" doc:id="bc34da53-7ef7-41a2-b389-b1ce33e78348" variableName="route" />
+		<flow-ref doc:name="RoutiongToFlows" doc:id="45cfb114-c6e9-43f5-bc10-0d0730040254" name="#[vars.route]" />
+		<logger level="INFO" doc:name="End of the flow" doc:id="e12a3243-ff87-40eb-b26f-d5511d257994" message="End of the flow #[now()]" />
+	</flow>
+</mule>
